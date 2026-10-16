@@ -1,0 +1,13 @@
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml
+*.jks
+*.keystore
+data/
+exports/
+*.apk
+*.mp4
+*.docx
+*.log

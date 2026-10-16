@@ -1,0 +1,15 @@
+plugins { id 'com.android.application' version '8.9.2' }
+android {
+    namespace 'org.example.detector.android'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'org.example.detector.demo'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0-demo'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    lint { abortOnError true }
+}
+dependencies { implementation project(':core') }

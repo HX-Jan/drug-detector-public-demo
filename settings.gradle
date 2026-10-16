@@ -1,0 +1,6 @@
+pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+rootProject.name = 'drug-detector-public-demo'
+include ':core', ':desktop'
+// Allows core/desktop verification on a computer without the Android SDK.
+if (!providers.gradleProperty('desktopOnly').isPresent()) { include ':app' }

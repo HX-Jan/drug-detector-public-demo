@@ -1,0 +1,9 @@
+plugins { id 'java-library' }
+java { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.register('verify', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.example.detector.core.CoreVerification'
+}
+check.dependsOn verify
