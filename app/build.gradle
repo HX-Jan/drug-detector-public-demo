@@ -6,10 +6,19 @@ android {
         applicationId 'org.example.detector.demo'
         minSdk 26
         targetSdk 35
-        versionCode 1
-        versionName '0.1.0-demo'
+        versionCode 2
+        versionName '0.2.0-demo'
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     lint { abortOnError true }
+    testOptions { unitTests.includeAndroidResources = true }
 }
-dependencies { implementation project(':core') }
+dependencies {
+    implementation project(':core')
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.14.1'
+}
+tasks.withType(Test).configureEach {
+    systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+    systemProperty 'detector.render.dir', layout.buildDirectory.dir('ui-evidence').get().asFile.absolutePath
+}

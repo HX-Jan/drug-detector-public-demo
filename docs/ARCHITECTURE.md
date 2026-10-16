@@ -15,6 +15,8 @@ flowchart LR
 
 核心不依赖 Android，能够在 JDK 环境下直接验证。界面只负责输入、事件和显示。`DetectionSession` 管理状态，`Calibration` 计算线性回归，`Signal` 保留采样序列，`DetectionResult` 固定保存检测结果与当次标曲，`ResultRepository` 提供保存与组合查询。
 
+v0.2 的 `ReferenceUi`（Android）与 `ReferenceTheme`（电脑）集中定义参考界面的颜色、字体、按钮、线性图标及步骤条。Android 使用原生 View、Canvas 和 Dialog，电脑使用 Swing、Java2D 和 glass pane。两端均为固定底部操作与可滚动内容，图表按窄屏实际尺寸绘制。演示数字键盘不构成安全授权边界。
+
 ## 状态与持久化
 
 流程为 `PREPARED → SAMPLE_ADDED → REACTING → READY → MEASURING → COMPLETED`，未完成时可以进入 `CANCELLED`。计时使用单调时钟，不受系统校时影响。重复完成被拒绝；保存失败时界面保留内存结果供重试，并明确显示未保存。

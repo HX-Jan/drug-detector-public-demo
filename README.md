@@ -12,11 +12,21 @@
 
 Android 最低版本为 8.0（API 26），编译目标 API 35。构建固定使用 AGP 8.9.2、Gradle 8.11.1、JDK 17；版本兼容关系见 [Android 官方说明](https://developer.android.com/build/releases/agp-8-9-0-release-notes)。
 
-## 初版功能
+## v0.2 界面复现
+
+以设备演示视频为主要视觉依据，补充文档中的历史记录和曲线详情。Android 和电脑入口采用一致的竖屏白底、蓝色按钮、三项快捷入口、五段检测步骤条、居中进度弹窗和数字键盘。参照位置及保留差异见 [界面对照说明](docs/UI_REFERENCE.md)。
+
+下图是 Android 原生 View 在 Robolectric 中的实际测试渲染，非真机截图，数据均为合成：
+
+| 首页 | 检测流程 | 管理员弹窗 |
+| --- | --- | --- |
+| <img src="docs/screenshots/android-connected.png" width="210" alt="Android 首页"/> | <img src="docs/screenshots/android-workflow.png" width="210" alt="Android 检测流程"/> | <img src="docs/screenshots/android-authorization.png" width="210" alt="Android 管理员演示弹窗"/> |
+
+## 基础功能
 
 - 模拟工作站连接与断开，未连接时禁止检测。
 - 选择甲基苯丙胺、吗啡、曲马多、美沙酮及虚构样品编号。
-- 确认电极 → 加样 → 等待反应 → 冲洗与添加反应液 → 模拟采集 → 结果保存。
+- 确认电极并模拟活化 → 加样 → 等待反应 → 冲洗与添加反应液 → 模拟采集 → 结果保存。
 - 5/10 分钟常规计时，以及明确标注的 5 秒演示加速模式。
 - 生成合成 DPV 曲线，计算正向峰值及峰电流差，按标曲反算浓度。
 - 5–10 个标定点的一元线性拟合，计算斜率、截距与 Pearson r；拒绝重复浓度、非有限值、零方差和非正斜率。
@@ -33,12 +43,14 @@ powershell -ExecutionPolicy Bypass -File .\scripts\desktop.ps1
 
 该入口无需 Android SDK 和 Gradle 下载，先编译、执行核心验收，再打开演示界面。JDK 的 `java` 和 `javac` 需在 PATH 中。
 
-1. 点击“连接模拟工作站”。
-2. 进入“样品测试”，使用自动生成的 `DEMO-…` 编号。
-3. 逐步确认操作，等待默认 5 秒演示计时结束后采集。
+1. 点击“连接设备”→“连接模拟设备”。
+2. 点击“开始样品测试”，使用自动生成的 `DEMO-…` 编号。
+3. 点击“开始测试”，逐步进行模拟活化、加样、反应和采集。默认反应计时为演示加速 5 秒。
 4. 查看合成结果、历史记录，选择一条或多条记录导出 `.xlsx`。
 
 电脑记录写入启动目录下的 `data/`，默认不进入 Git。请仅录入虚构编号。
+
+标曲入口为“系统设置”→“标准曲线管理”，演示口令 **123456**。这是为了复现视频中的数字键盘交互，不提供真实厂家权限控制。
 
 电脑演示入口的实际结果页面（合成数据）：
 
@@ -49,10 +61,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\desktop.ps1
 使用 Android Studio 打开本仓库，设置 Gradle JDK 为 17，安装 Android SDK Platform 35 和 Build Tools 35.0.0。SDK 路径由 Android Studio 写入本地 `local.properties`，此文件不提交。
 
 ```powershell
-.\gradlew.bat :core:check :app:assembleDebug :app:lintDebug
+.\gradlew.bat :core:check :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-产物为 `app/build/outputs/apk/debug/app-debug.apk`，是调试签名的演示 APK。安装后先点击“连接模拟工作站”。Android 导出使用系统“另存为”界面，可选择本地或系统已挂载的 U 盘，无需申请所有文件存储权限。取消文件选择不会导出。
+产物为 `app/build/outputs/apk/debug/app-debug.apk`，是调试签名的演示 APK。安装后先连接模拟设备。Android 导出使用系统“另存为”界面，可选择本地或系统已挂载的 U 盘，无需申请所有文件存储权限。取消文件选择不会导出。
 
 仅验证电脑模块时可跳过 Android 插件与 SDK：
 
