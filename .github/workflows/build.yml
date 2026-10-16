@@ -1,5 +1,9 @@
 name: Java and Android build
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -12,6 +16,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
       - name: Verify core and assemble demo
         run: bash gradlew :core:check :desktop:build :app:assembleDebug :app:lintDebug --no-daemon
       - name: Desktop workflow smoke test
