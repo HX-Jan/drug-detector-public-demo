@@ -72,14 +72,24 @@ public final class XlsxExporter {
           + " Target=\"worksheets/sheet2.xml\"/></Relationships>");
       StringBuilder summary = start(), traces = start();
       row(summary, "数据来源", "记录ID", "样品编号", "类型", "浓度 ng/L", "检测时间 UTC", "状态", "I0 μA", "I1 μA",
-          "ΔI μA", "标曲ID", "k", "b", "r", "下限 ng/L", "上限 ng/L");
+          "ΔI μA", "标曲ID", "k", "b", "r", "下限 ng/L", "上限 ng/L", "AI 分析方式", "AI 状态",
+          "AI 模型", "AI 版本", "AI 复核建议", "AI 请求ID", "AI 峰电位 V", "AI 净峰电流 μA", "AI 说明", "AI 识别类型", "AI 置信度", "AI 分析时间 UTC");
       row(traces, "数据来源", "记录ID", "电位 V", "电流 μA");
       for (DetectionResult r : records) {
         row(summary, r.origin.name(), r.id, r.sampleId, r.drug.label, r.concentration,
             DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(r.epochMillis)), r.status(),
             r.baselinePeak, r.samplePeak, r.samplePeak - r.baselinePeak, r.calibration.id,
             r.calibration.slope, r.calibration.intercept, r.calibration.r, r.calibration.min,
-            r.calibration.max);
+            r.calibration.max, r.ai == null ? "NOT_ANALYZED" : r.ai.mode.name(),
+            r.ai == null ? "NOT_ANALYZED" : r.ai.status.name(), r.ai == null ? "" : r.ai.modelId,
+            r.ai == null ? "" : r.ai.modelVersion, r.ai == null ? "" : r.ai.recommendation,
+            r.ai == null ? "" : r.ai.requestId,
+            r.ai == null || r.ai.features == null ? "" : r.ai.features.peakVoltageV,
+            r.ai == null || r.ai.features == null ? "" : r.ai.features.netPeakUa,
+            r.ai == null ? "旧记录未进行 AI 分析" : r.ai.message,
+            r.ai == null || r.ai.predictedDrug == null ? "" : r.ai.predictedDrug.label,
+            r.ai == null || r.ai.confidence == null ? "" : r.ai.confidence,
+            r.ai == null ? "" : DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(r.ai.epochMillis)));
         double[] v = r.signal.voltages(), i = r.signal.currents();
         for (int n = 0; n < v.length; n++)
           row(traces, r.origin.name(), r.id, v[n], i[n]);

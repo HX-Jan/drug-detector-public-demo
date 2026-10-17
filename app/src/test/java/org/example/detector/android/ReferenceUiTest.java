@@ -159,11 +159,24 @@ public class ReferenceUiTest {
       advance(200);
       render("android-measurement", 360, 640);
       advance(1700);
+      render("android-ai-progress", 360, 640);
+      advance(1000);
       assertNotNull(find(root(), "记录详情"));
       assertEquals(1, new SqliteResultRepository(activity).all().size());
       assertEquals(DataOrigin.SIMULATED, new SqliteResultRepository(activity).all().get(0).origin);
       assertNotNull(find(root(), "模拟检测完成"));
+      DetectionResult aiResult = new SqliteResultRepository(activity).all().get(0);
+      assertNotNull(aiResult.ai);
+      assertEquals(AiReport.Mode.SIMULATED, aiResult.ai.mode);
+      assertNull(aiResult.ai.confidence);
       render("android-result", 360, 640);
+      click("查看 AI 分析");
+      assertNotNull(find(root(), "AI 辅助分析"));
+      render("android-ai-analysis", 360, 640);
+      render("android-ai-compact", 320, 568);
+      ((ScrollView) activity.body.getParent()).fullScroll(View.FOCUS_DOWN);
+      advance(10);
+      render("android-ai-model", 360, 640);
       click("DPV 曲线");
       render("android-signal", 360, 640);
       click("历史记录");
@@ -261,6 +274,7 @@ public class ReferenceUiTest {
       assertNotNull(find(root(), "毒品快速检测仪"));
       try (SqliteResultRepository repo = new SqliteResultRepository(activity)) {
         assertEquals(1, repo.all().size());
+        assertNotNull(repo.all().get(0).ai);
       }
     }
   }

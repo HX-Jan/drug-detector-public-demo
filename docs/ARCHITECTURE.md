@@ -19,6 +19,8 @@ v0.2 的 `ReferenceUi`（Android）与 `ReferenceTheme`（电脑）集中定义�
 
 ## 状态与持久化
 
+v1.1.0 在检测完成后通过 `AiRequest → AiAnalyzer → AiReport` 独立分析。`AiAnalysis` 检查响应关联并将服务异常记录为 FAILED，`DetectionResult.withAi` 保留检测数值与曲线，v3 编码追加 AI 快照并继续读取 v1/v2；Excel 同步输出 AI 元数据。公开应用仅注入 `SimulatedAiAnalyzer`，不执行真实模型推理或网络请求，见 [AI 接入说明](AI_INTEGRATION.md)。
+
 流程为 `PREPARED → SAMPLE_ADDED → REACTING → READY → MEASURING → COMPLETED`，未完成时可以进入 `CANCELLED`。计时使用单调时钟，不受系统校时影响。重复完成被拒绝；保存失败时界面保留内存结果供重试，并明确显示未保存。
 
 结果包含记录 UUID、虚构样品编号、类型、时间戳、I0、I1、浓度、标曲编号/k/b/r/适用区间以及电位电流序列。Android 用 SQLite 唯一主键禁止覆盖；电脑每条记录写入单独文件，通过临时文件完成写入再移动。读取损坏记录会报告错误，不悄悄跳过。

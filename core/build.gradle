@@ -25,3 +25,16 @@ tasks.register('verifyAcquisition', JavaExec) {
     mainClass = 'org.example.detector.core.AcquisitionVerification'
 }
 check.dependsOn verifyAcquisition
+tasks.register('verifyAi', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.example.detector.core.AiVerification'
+}
+check.dependsOn verifyAi
+tasks.register('demoAi', JavaExec) {
+    dependsOn classes
+    workingDir rootProject.projectDir
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.example.detector.core.AiDemo'
+    if (project.hasProperty('aiOutput')) args project.property('aiOutput')
+}

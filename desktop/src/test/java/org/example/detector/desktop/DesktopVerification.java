@@ -160,7 +160,12 @@ public final class DesktopVerification {
         throw new AssertionError("Result not persisted");
       if (new FileResultRepository(data).all().get(0).origin != DataOrigin.SIMULATED)
         throw new AssertionError("Result must retain simulated origin");
+      DetectionResult aiResult = new FileResultRepository(data).all().get(0);
+      if (aiResult.ai == null || aiResult.ai.mode != AiReport.Mode.SIMULATED || aiResult.ai.confidence != null)
+        throw new AssertionError("Missing AI simulation report or fake confidence");
       capture(evidence.resolve("result.png"));
+      click("查看 AI 分析");
+      capture(evidence.resolve("ai-analysis.png"));
       click("DPV 曲线");
       capture(evidence.resolve("signal.png"));
       click("计算详情");
@@ -283,6 +288,8 @@ public final class DesktopVerification {
       click("历史记录");
       if (new FileResultRepository(data).all().size() != 1)
         throw new AssertionError("Restart lost history");
+      if (new FileResultRepository(data).all().get(0).ai == null)
+        throw new AssertionError("Restart lost AI report");
       System.out.println("PASS: 检测闭环、倒计时门禁、扫描连接、管理员口令、标曲删除取消/确认、五步向导、三次采集、十次LOD、实际导出、重启、紧凑窗口与截图");
     } finally {
       if (app != null)

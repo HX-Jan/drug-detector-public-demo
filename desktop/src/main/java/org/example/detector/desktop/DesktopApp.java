@@ -17,6 +17,8 @@ public final class DesktopApp extends JFrame {
   private final Workstation realDevice = new UnavailableWorkstation();
   private final SimulatedWorkstation benchDevice = new SimulatedWorkstation();
   private Workstation device = benchDevice;
+  // 真实 AI 仅需替换此适配器；公开仓库不包含私有模型实现。
+  private final AiAnalyzer aiAnalyzer = new SimulatedAiAnalyzer();
   private final ResultRepository repository;
   final CurveLibrary library;
   final Path dataDirectory;
@@ -167,7 +169,7 @@ public final class DesktopApp extends JFrame {
 
   private void home() {
     cancel();
-    page("毒品快速检测仪", "电化学检测终端", false);
+    page("毒品快速检测仪", "电化学检测与 AI 辅助分析演示", false);
     JPanel connection = card();
     JPanel row = new JPanel(new BorderLayout(8, 0));
     row.setOpaque(false);
@@ -442,7 +444,7 @@ public final class DesktopApp extends JFrame {
     bar.setBackground(PALE);
     bar.setBorderPainted(false);
     add(p, bar, 6, 15);
-    JLabel caption = label("数据采集中 · 请勿关闭应用", 10, MUTED);
+    JLabel caption = label(title.startsWith("AI") ? "模拟分析中 · 检测数据已采集" : "数据采集中 · 请勿关闭应用", 10, MUTED);
     caption.setHorizontalAlignment(SwingConstants.CENTER);
     add(p, caption, 18, 0);
     showOverlay(p);
@@ -467,7 +469,10 @@ public final class DesktopApp extends JFrame {
       unsaved = session.complete(selectedCalibration, device.baseline(),
           device.sample(session.sampleId, session.drug), System.currentTimeMillis(),
           DataOrigin.combine(device.origin(), selectedOrigin));
-      savePending();
+      progress("AI 辅助分析", "正在向模拟分析服务提交曲线…", 800, () -> {
+        unsaved = unsaved.withAi(AiAnalysis.run(aiAnalyzer, new AiRequest(unsaved)));
+        savePending();
+      });
     });
   }
 
@@ -501,7 +506,7 @@ public final class DesktopApp extends JFrame {
 
   private void detail(DetectionResult r, int tab) {
     page("记录详情", r.sampleId + "  ·  " + r.drug.label, true);
-    tabs(new String[]{"检测信息", "DPV 曲线", "计算详情"}, tab, i -> detail(r, i));
+    tabs(new String[]{"检测信息", "DPV 曲线", "计算详情", "AI 分析"}, tab, i -> detail(r, i));
     JPanel p = card();
     if (tab == 0) {
       text(p, r.origin == DataOrigin.SIMULATED ? "模拟检测完成" : "检测完成", 21, GREEN);
@@ -510,21 +515,41 @@ public final class DesktopApp extends JFrame {
       text(p, "毒品类型    " + r.drug.label + "\n样品编号    " + r.sampleId + "\n检测时间    "
           + date.format(new Date(r.epochMillis)), 12, INK);
       text(p, "✓ 已保存至本地记录", 11, GREEN);
+      text(p, "AI 辅助分析    " + (r.ai == null ? "尚未分析" : r.ai.statusLabel()), 12, BLUE);
+      add(p, control("查看 AI 分析", false, () -> detail(r, 3)), 36, 0);
     } else if (tab == 1) {
       text(p, "DPV 信号", 13, INK);
       add(p, new Plot(r.signal, "V", "DPV 信号"), 235, 0);
-    } else {
+    } else if (tab == 2) {
       text(p, "峰电流计算", 14, INK);
       text(p, String.format(Locale.ROOT, "基线峰 I0    %.5f μA\n样品峰 I1    %.5f μA\n峰电流差 ΔI    %.5f μA",
           r.baselinePeak, r.samplePeak, r.samplePeak - r.baselinePeak), 12, INK);
       text(p, r.calibration.equation(), 12, BLUE);
       text(p, "适用区间 " + r.calibration.min + "–" + r.calibration.max + " ng/L\n标曲 ID："
           + r.calibration.id, 10, MUTED);
+    } else {
+      aiDetails(r, p);
     }
     note("结果保存于本地记录 · 可导出存档");
     action("导出检测数据", () -> export(Collections.singletonList(r)));
     add(footer, control("历史记录", false, () -> history("", null)), 38, 0);
     render();
+  }
+
+  private void aiDetails(DetectionResult r, JPanel p) {
+    text(p, "AI 辅助分析", 17, BLUE);
+    if (r.ai == null) {
+      text(p, "此记录尚未进行 AI 分析。新检测会自动运行模拟分析服务。", 13, INK);
+      return;
+    }
+    AiReport ai = r.ai;
+    text(p, ai.statusLabel() + "\n" + ai.reviewLabel(), 14, INK);
+    text(p, ai.message, 12, MUTED);
+    text(p, "复核建议\n" + ai.recommendation, 13, INK);
+    if (ai.features != null) text(p, "曲线特征（数学计算）\n" + ai.features.display(), 12, INK);
+    text(p, "人工选择类型    " + r.drug.label + "\nAI 类型识别    " + ai.classification()
+        + "\n分类置信度    " + (ai.confidence == null ? "未提供" : String.format(Locale.ROOT, "%.2f", ai.confidence)), 12, INK);
+    text(p, ai.modelDisplay() + "\n信号来源    " + r.origin.label, 10, MUTED);
   }
 
   private void history(String query, DrugType filter) {

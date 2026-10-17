@@ -9,7 +9,7 @@ public final class ResultCodec {
   public static byte[] encode(DetectionResult r) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     try (DataOutputStream out = new DataOutputStream(buffer)) {
-      out.writeInt(0x44545032);
+      out.writeInt(0x44545033);
       out.writeUTF(r.id);
       out.writeUTF(r.sampleId);
       out.writeUTF(r.drug.name());
@@ -30,6 +30,7 @@ public final class ResultCodec {
         out.writeDouble(v[n]);
         out.writeDouble(i[n]);
       }
+      AiCodec.write(out, r.ai);
     }
     return buffer.toByteArray();
   }
@@ -37,12 +38,13 @@ public final class ResultCodec {
   public static DetectionResult decode(byte[] bytes) throws IOException {
     try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
       int version = in.readInt();
-      if (version != 0x44545031 && version != 0x44545032) throw new IOException("不支持的记录格式");
+      if (version != 0x44545031 && version != 0x44545032 && version != 0x44545033)
+        throw new IOException("不支持的记录格式");
       String id = in.readUTF(), sample = in.readUTF();
       DrugType drug = DrugType.valueOf(in.readUTF());
       long time = in.readLong();
       DataOrigin origin =
-          version == 0x44545032 ? DataOrigin.valueOf(in.readUTF()) : DataOrigin.UNKNOWN;
+          version != 0x44545031 ? DataOrigin.valueOf(in.readUTF()) : DataOrigin.UNKNOWN;
       double base = in.readDouble(), peak = in.readDouble();
       Calibration c =
           new Calibration(
@@ -60,8 +62,10 @@ public final class ResultCodec {
         v[n] = in.readDouble();
         i[n] = in.readDouble();
       }
+      AiReport ai = version == 0x44545033 ? AiCodec.read(in) : null;
       if (in.available() != 0) throw new IOException("记录包含未识别的数据");
-      return new DetectionResult(id, sample, drug, time, base, peak, c, new Signal(v, i), origin);
+      return new DetectionResult(
+          id, sample, drug, time, base, peak, c, new Signal(v, i), origin, ai);
     } catch (IllegalArgumentException ex) {
       throw new IOException("记录内容无效", ex);
     }
