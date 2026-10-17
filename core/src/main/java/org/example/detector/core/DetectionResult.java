@@ -1,5 +1,6 @@
 package org.example.detector.core;
 
+/** 不可变检测结果，保存当次信号与标曲快照；drug 是操作员选择的类型，不是识别结论。 */
 public final class DetectionResult {
   public final String id, sampleId;
   public final DrugType drug;
@@ -40,6 +41,6 @@ public final class DetectionResult {
   }
 
   public String status() {
-    return calibration.inRange(concentration) ? "模拟值（标曲范围内）" : "模拟值（超出标曲范围）";
+    return calibration.inRange(concentration) ? "待判定（标曲范围内）" : "超出标曲范围";
   }
 }

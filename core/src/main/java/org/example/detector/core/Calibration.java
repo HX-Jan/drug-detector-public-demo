@@ -3,26 +3,18 @@ package org.example.detector.core;
 import java.util.Locale;
 import java.util.UUID;
 
-/** y = k*x+b; x: ng/L, y: adjacent peak-current difference in microamperes. */
+/** 线性标曲 y=kC+b。浓度单位 ng/L（数值等同 pg/mL），电流单位 μA。 */
 public final class Calibration {
   public final String id;
   public final DrugType drug;
   public final double slope, intercept, r, min, max;
 
-  public Calibration(
-      String id, DrugType drug, double slope, double intercept, double r, double min, double max) {
-    if (id == null
-        || drug == null
-        || !Double.isFinite(slope)
-        || slope <= 1e-12
-        || !Double.isFinite(intercept)
-        || !Double.isFinite(r)
-        || r < -1
-        || r > 1
-        || !Double.isFinite(min)
-        || !Double.isFinite(max)
-        || min < 0
-        || max <= min) throw new IllegalArgumentException("标曲参数无效");
+  public Calibration(String id, DrugType drug, double slope, double intercept, double r, double min,
+      double max) {
+    if (id == null || drug == null || !Double.isFinite(slope) || slope <= 1e-12
+        || !Double.isFinite(intercept) || !Double.isFinite(r) || r < -1 || r > 1
+        || !Double.isFinite(min) || !Double.isFinite(max) || min < 0 || max <= min)
+      throw new IllegalArgumentException("标曲参数无效");
     this.id = id;
     this.drug = drug;
     this.slope = slope;
@@ -32,7 +24,7 @@ public final class Calibration {
     this.max = max;
   }
 
-  /** Uses I1-I0, I2-I1 ... exactly as specified in the supplied device description. */
+  /** 保留旧版相邻电流差拟合接口；新向导使用 StandardCurve.fit 的固定基线差。 */
   public static Calibration fit(DrugType drug, double[] concentration, double[] cumulativePeaks) {
     int n = concentration.length;
     if (n < 5 || n > 10 || cumulativePeaks.length != n + 1)
@@ -40,7 +32,8 @@ public final class Calibration {
     double[] y = new double[n];
     double mx = 0, my = 0;
     for (double p : cumulativePeaks)
-      if (!Double.isFinite(p)) throw new IllegalArgumentException("峰电流必须为有限数值");
+      if (!Double.isFinite(p))
+        throw new IllegalArgumentException("峰电流必须为有限数值");
     for (int i = 0; i < n; i++) {
       double x = concentration[i];
       if (!Double.isFinite(x) || x <= 0 || (i > 0 && x <= concentration[i - 1]))
@@ -56,22 +49,20 @@ public final class Calibration {
       yy += dy * dy;
       xy += dx * dy;
     }
-    if (xx < 1e-12 || yy < 1e-12) throw new IllegalArgumentException("标定点缺乏有效变化");
+    if (xx < 1e-12 || yy < 1e-12)
+      throw new IllegalArgumentException("标定点缺乏有效变化");
     double k = xy / xx;
-    return new Calibration(
-        "DEMO-FIT-" + UUID.randomUUID(),
-        drug,
-        k,
-        my - k * mx,
-        Math.max(-1, Math.min(1, xy / Math.sqrt(xx * yy))),
-        concentration[0],
-        concentration[n - 1]);
+    return new Calibration("FIT-" + UUID.randomUUID(), drug, k, my - k * mx,
+        Math.max(-1, Math.min(1, xy / Math.sqrt(xx * yy))), concentration[0], concentration[n - 1]);
   }
 
   public double concentration(double delta) {
-    if (!Double.isFinite(delta)) throw new IllegalArgumentException("电流差值无效");
+    // 不截断负数或区间外值，让调用方能够如实显示超出标定范围的状态。
+    if (!Double.isFinite(delta))
+      throw new IllegalArgumentException("电流差值无效");
     double result = (delta - intercept) / slope;
-    if (!Double.isFinite(result)) throw new IllegalArgumentException("浓度计算溢出");
+    if (!Double.isFinite(result))
+      throw new IllegalArgumentException("浓度计算溢出");
     return result;
   }
 
@@ -93,7 +84,6 @@ public final class Calibration {
   }
 
   public static Calibration demo(DrugType drug) {
-    return new Calibration(
-        "DEMO-FIXTURE-" + drug.name(), drug, 0.08 + drug.ordinal() * 0.015, 0.2, 1.0, 1, 100);
+    throw new IllegalStateException("检测项目尚未配置有效标准曲线");
   }
 }

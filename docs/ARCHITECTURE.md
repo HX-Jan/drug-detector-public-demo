@@ -27,6 +27,8 @@ v0.2 的 `ReferenceUi`（Android）与 `ReferenceTheme`（电脑）集中定义�
 
 ## 标曲约定
 
+交互界面说明1对应的新流程由 `CurveWorkflow` 控制；`StandardCurve` 保存参数、采集值与 LOD/LOQ；`CurveLibrary` 用原子文件替换持久化完整标曲；`CurveExport` 生成 JSON 与 XLSX。`DesktopCurveEditor` 和 `AndroidCurveEditor` 只负责原生界面适配。新向导采用固定基线差，支持 2–10 个浓度点，每点三次重复；LOD 为十次反算浓度的样本标准差乘 2.82，LOQ 为 LOD 的四倍。下文的相邻差值接口为旧版兼容接口。
+
 输入浓度需为 5–10 个严格递增的正数；峰电流需要多一个 I0。使用中心化最小二乘计算 k/b，并以 Pearson r 表示相关系数。k 必须为正且不接近零；不设未经实验确认的 r 合格阈值。标曲适用范围为输入浓度最小值到最大值。当前线性模型是演示约定；真实信号可能需要非线性拟合、对数浓度或其他预处理，应以实验确认后单独实现。
 
 ## 真实硬件后续接入

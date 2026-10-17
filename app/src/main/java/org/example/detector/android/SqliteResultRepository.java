@@ -7,9 +7,10 @@ import java.io.IOException;
 import java.util.*;
 import org.example.detector.core.*;
 
+/** Android 本地记录库，以 UUID 主键防止重复覆盖，payload 使用核心模块统一编码。 */
 final class SqliteResultRepository extends SQLiteOpenHelper implements ResultRepository {
   SqliteResultRepository(Context context) {
-    super(context, "demo-results.db", null, 1);
+    super(context, "detection-results.db", null, 1);
   }
 
   @Override

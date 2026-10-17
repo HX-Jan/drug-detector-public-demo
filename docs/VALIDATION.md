@@ -1,5 +1,27 @@
 # v0.2 验收记录
 
+## 交互界面说明1修改验收
+
+验证日期：2026-10-17。以下为本次修改后的实际执行结果；后续章节为 v0.2 的历史记录。
+
+| 项目 | 本次结果 |
+| --- | --- |
+| 原核心验收 | `CoreVerification` 40 项通过 |
+| 新标曲验收 | 拟合、已知样本标准差、LOD/LOQ、非法输入、活化曲线保存、重启、删除、状态失效、JSON/XLSX 通过 |
+| 电脑端界面 | 扫描连接、检测闭环、计时门禁、错误/正确口令、删除取消/确认、五步向导、3 次重复、10 次 LOD、实际本地导出、曲线标签、重启和紧凑窗口通过 |
+| Android 界面 | Robolectric NATIVE API 35 完整流程通过，0 failures / 0 errors；360×640 与 320×568 渲染 |
+| Android 构建 | `assembleDebug` 通过，调试 APK 已复制回项目 `app/build/outputs/apk/debug/app-debug.apk` |
+| Android lint | 0 errors，10 warnings；包含工具版本、国际化和无障碍等非阻断项 |
+| 独立文件核对 | Python JSON 解析及 openpyxl 读取通过，Excel 两张表、参数表 4 行、数据表 623 行；独立重算 LOD/LOQ 一致，无公式单元格 |
+| 运行截图 | `docs/screenshots/reference1/`，包含新版页面、输入键盘、删除确认、采集进度、统计详情和窄屏界面；`overview.jpg` 为部分电脑端页面总览 |
+| 空白检查 | `git diff --check` 通过 |
+
+本机 Gradle/JUnit 在中文工程路径加载测试类时出现 `ClassNotFoundException`，定位为测试进程的路径兼容问题。因此 Android 测试和构建在 `C:/Users/32421/.cache/drug-detector-build/reference-ui-task` 的同源英文路径副本执行，产物和截图复制回当前项目。电脑端直接在当前中文目录编译并验证。JDK 为 17，Gradle 为已缓存的 8.11.1；保留工作区已有的 wrapper 修改，没有为测试改写它们。
+
+完整 Android 任务：`:core:check :desktop:build :app:testDebugUnitTest :app:assembleDebug :app:lintDebug`。电脑端任务：`powershell -ExecutionPolicy Bypass -File .\scripts\desktop.ps1 -VerifyUi`。
+
+实际 U 盘、系统文件选择器、Android 真机和真实仪器通信仍需对应硬件验证。本次所有信号均为模拟。
+
 验证日期：2026-10-16，Windows，JDK 17 构建，Java 17 语言级别。
 
 ## 已执行

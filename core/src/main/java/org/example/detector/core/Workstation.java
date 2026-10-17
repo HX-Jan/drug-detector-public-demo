@@ -1,6 +1,6 @@
 package org.example.detector.core;
 
-/** Public transport boundary. No proprietary BLE/USB commands are present. */
+/** 设备通信接口；适配器必须返回真实设备状态和采样结果。 */
 public interface Workstation {
   void connect();
 

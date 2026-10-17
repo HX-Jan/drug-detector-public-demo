@@ -7,3 +7,15 @@ tasks.register('verify', JavaExec) {
     mainClass = 'org.example.detector.core.CoreVerification'
 }
 check.dependsOn verify
+tasks.register('verifyCurves', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.example.detector.core.StandardCurveVerification'
+}
+check.dependsOn verifyCurves
+tasks.register('verifyDemoCatalog', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.example.detector.core.DemoCatalogVerification'
+}
+check.dependsOn verifyDemoCatalog

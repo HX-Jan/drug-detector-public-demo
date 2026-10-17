@@ -78,6 +78,12 @@ public final class CoreVerification {
     rejects(flow::finishReaction);
     now.set(5000);
     flow.finishReaction();
+    DetectionSession skipped = new DetectionSession("DEMO-SKIP", c.drug, 300000, now::get);
+    rejects(skipped::skipReaction);
+    skipped.confirmElectrode();
+    skipped.confirmSample();
+    skipped.skipReaction();
+    check(skipped.stage() == DetectionSession.Stage.READY, "skip reaction advances to ready");
     rejects(() -> flow.beginMeasurement(false));
     flow.beginMeasurement(true);
     rejects(
@@ -90,7 +96,7 @@ public final class CoreVerification {
     DetectionResult result =
         flow.complete(c, station.baseline(), station.sample("DEMO-001", c.drug), 1000);
     check(result.calibration.id.equals(c.id), "calibration snapshot");
-    check(result.status().contains("模拟"), "simulation label");
+    check(result.status().startsWith("待判定"), "simulation label");
     near(c.concentration(result.samplePeak - result.baselinePeak), result.concentration);
     rejects(() -> flow.complete(c, station.baseline(), station.sample("DEMO-001", c.drug), 1000));
     flow.cancel();
@@ -150,10 +156,10 @@ public final class CoreVerification {
         String value = new String(xml, java.nio.charset.StandardCharsets.UTF_8);
         if (entry.getName().equals("xl/worksheets/sheet1.xml")) {
           summary =
-              value.contains("SIMULATED") && value.contains("DEMO-001") && !value.contains("<f>");
+              value.contains("detector-result") && value.contains("DEMO-001") && !value.contains("<f>");
         }
         if (entry.getName().equals("xl/worksheets/sheet2.xml")) {
-          traces = value.contains("合成") || value.contains("SIMULATED");
+          traces = value.contains("detector-result");
         }
       }
     }

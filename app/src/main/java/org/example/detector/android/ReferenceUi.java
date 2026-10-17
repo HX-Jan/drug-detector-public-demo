@@ -6,14 +6,10 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.*;
 import android.widget.*;
 
-/** Visual tokens transcribed from the device video, without the camera colour cast. */
+/** 根据设备参考图定义颜色、间距和原生控件，去除拍摄产生的屏幕偏色。 */
 final class ReferenceUi {
-  static final int BLUE = 0xff1764ed,
-      INK = 0xff202c40,
-      MUTED = 0xff8793a6,
-      LINE = 0xffe5eaf2,
-      PALE = 0xfff5f8fc,
-      GREEN = 0xff28ad79;
+  static final int BLUE = 0xff1764ed, INK = 0xff202c40, MUTED = 0xff8793a6, LINE = 0xffe5eaf2,
+      PALE = 0xfff5f8fc, GREEN = 0xff28ad79;
 
   static int dp(Context c, int n) {
     return Math.round(n * c.getResources().getDisplayMetrics().density);
@@ -23,7 +19,8 @@ final class ReferenceUi {
     GradientDrawable d = new GradientDrawable();
     d.setColor(color);
     d.setCornerRadius(dp(c, radius));
-    if (border != 0) d.setStroke(dp(c, 1), border);
+    if (border != 0)
+      d.setStroke(dp(c, 1), border);
     return d;
   }
 
@@ -54,15 +51,13 @@ final class ReferenceUi {
     b.setMinHeight(0);
     b.setMinimumHeight(0);
     b.setPadding(dp(c, 8), 0, dp(c, 8), 0);
-    android.content.res.ColorStateList colors =
-        new android.content.res.ColorStateList(
-            new int[][] {new int[] {-android.R.attr.state_enabled}, new int[] {}},
-            new int[] {primary ? 0xffc8d4e8 : PALE, primary ? BLUE : Color.WHITE});
+    android.content.res.ColorStateList colors = new android.content.res.ColorStateList(
+        new int[][]{new int[]{-android.R.attr.state_enabled}, new int[]{}},
+        new int[]{primary ? 0xffc8d4e8 : PALE, primary ? BLUE : Color.WHITE});
     GradientDrawable normal = shape(c, primary ? BLUE : Color.WHITE, primary ? 0 : LINE, 6);
     normal.setColor(colors);
-    b.setBackground(
-        new android.graphics.drawable.RippleDrawable(
-            android.content.res.ColorStateList.valueOf(0x221764ed), normal, null));
+    b.setBackground(new android.graphics.drawable.RippleDrawable(
+        android.content.res.ColorStateList.valueOf(0x221764ed), normal, null));
     b.setOnClickListener(v -> action.run());
     return b;
   }
@@ -99,18 +94,15 @@ final class ReferenceUi {
       p.setStrokeJoin(Paint.Join.ROUND);
       if (name.equals("records")) {
         canvas.drawRoundRect(7, 4, 25, 28, 2, 2, p);
-        for (int y = 11; y <= 23; y += 6) canvas.drawLine(12, y, 21, y, p);
+        for (int y = 11; y <= 23; y += 6)
+          canvas.drawLine(12, y, 21, y, p);
       } else if (name.equals("settings")) {
         canvas.drawCircle(16, 16, 9, p);
         canvas.drawCircle(16, 16, 3, p);
         for (int i = 0; i < 8; i++) {
           double a = i * Math.PI / 4;
-          canvas.drawLine(
-              16 + (float) Math.cos(a) * 9,
-              16 + (float) Math.sin(a) * 9,
-              16 + (float) Math.cos(a) * 13,
-              16 + (float) Math.sin(a) * 13,
-              p);
+          canvas.drawLine(16 + (float) Math.cos(a) * 9, 16 + (float) Math.sin(a) * 9,
+              16 + (float) Math.cos(a) * 13, 16 + (float) Math.sin(a) * 13, p);
         }
       } else if (name.equals("bluetooth")) {
         Path path = new Path();
@@ -168,11 +160,8 @@ final class ReferenceUi {
         double angle = i * Math.PI / 6;
         paint.setColor(BLUE);
         paint.setAlpha(45 + Math.floorMod(i - phase, 12) * 18);
-        canvas.drawCircle(
-            cx + (float) Math.cos(angle) * r,
-            cy + (float) Math.sin(angle) * r,
-            dp(getContext(), 2),
-            paint);
+        canvas.drawCircle(cx + (float) Math.cos(angle) * r, cy + (float) Math.sin(angle) * r,
+            dp(getContext(), 2), paint);
       }
     }
   }

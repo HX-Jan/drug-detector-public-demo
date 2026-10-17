@@ -5,13 +5,10 @@ import java.awt.geom.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
-/** Mirrors the white, blue and compact portrait layout visible on the reference device. */
+/** 参考设备的白底、蓝色主按钮和紧凑竖屏样式，统一字体、边框、间距与图标。 */
 final class ReferenceTheme {
-  static final Color BLUE = new Color(0x1764ed),
-      INK = new Color(0x202c40),
-      MUTED = new Color(0x8793a6),
-      LINE = new Color(0xe5eaf2),
-      PALE = new Color(0xf5f8fc),
+  static final Color BLUE = new Color(0x1764ed), INK = new Color(0x202c40),
+      MUTED = new Color(0x8793a6), LINE = new Color(0xe5eaf2), PALE = new Color(0xf5f8fc),
       GREEN = new Color(0x28ad79);
 
   static Font font(int size, boolean bold) {
@@ -56,20 +53,19 @@ final class ReferenceTheme {
   }
 
   static JPanel panel() {
-    JPanel p =
-        new JPanel() {
-          @Override
-          protected void paintComponent(Graphics graphics) {
-            super.paintComponent(graphics);
-            Graphics2D g = (Graphics2D) graphics.create();
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setColor(getBackground());
-            g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
-            g.setColor(LINE);
-            g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
-            g.dispose();
-          }
-        };
+    JPanel p = new JPanel() {
+      @Override
+      protected void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
+        Graphics2D g = (Graphics2D) graphics.create();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(getBackground());
+        g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+        g.setColor(LINE);
+        g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+        g.dispose();
+      }
+    };
     p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
     p.setOpaque(false);
     p.setBackground(Color.WHITE);
@@ -88,6 +84,38 @@ final class ReferenceTheme {
   static String escape(String value) {
     return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
   }
+  /** 窄屏改变宽度时重新测量多行文字，避免目的地路径换行后被卡片裁切。 */
+  static JLabel wrappingLabel(String value, int size, Color color) {
+    JLabel l = new JLabel("<html>" + escape(value).replace("\n", "<br>") + "</html>") {
+      @Override
+      public Dimension getPreferredSize() {
+        int width = 340;
+        if (getParent() != null && getParent().getWidth() > 0) {
+          Insets in = getParent().getInsets();
+          width = Math.max(80, getParent().getWidth() - in.left - in.right);
+        }
+        javax.swing.text.View view = (javax.swing.text.View) getClientProperty(
+            javax.swing.plaf.basic.BasicHTML.propertyKey);
+        if (view == null)
+          return super.getPreferredSize();
+        view.setSize(width, 0);
+        return new Dimension(width,
+            (int) Math.ceil(view.getPreferredSpan(javax.swing.text.View.Y_AXIS)));
+      }
+      @Override
+      public Dimension getMaximumSize() {
+        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+      }
+      @Override
+      public Dimension getMinimumSize() {
+        return new Dimension(80, getPreferredSize().height);
+      }
+    };
+    l.setFont(font(size, false));
+    l.setForeground(color);
+    l.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return l;
+  }
 
   static void add(JPanel p, JComponent c, int height, int gap) {
     c.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -96,29 +124,30 @@ final class ReferenceTheme {
       c.setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
     }
     p.add(c);
-    if (gap > 0) p.add(Box.createVerticalStrut(gap));
+    if (gap > 0)
+      p.add(Box.createVerticalStrut(gap));
   }
 
   static JButton button(String text, boolean primary, Runnable action) {
-    JButton b =
-        new JButton(text) {
-          @Override
-          protected void paintComponent(Graphics graphics) {
-            Graphics2D g = (Graphics2D) graphics.create();
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setColor(
-                !isEnabled()
-                    ? LINE
-                    : primary ? BLUE : getModel().isRollover() ? PALE : Color.WHITE);
-            g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
-            if (!primary && !getText().equals("‹")) {
-              g.setColor(LINE);
-              g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
-            }
-            g.dispose();
-            super.paintComponent(graphics);
-          }
-        };
+    JButton b = new JButton(text) {
+      @Override
+      protected void paintComponent(Graphics graphics) {
+        Graphics2D g = (Graphics2D) graphics.create();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(!isEnabled()
+            ? LINE
+            : primary
+                ? (Boolean.TRUE.equals(getClientProperty("danger")) ? new Color(0xd84d59) : BLUE)
+                : getModel().isRollover() ? PALE : Color.WHITE);
+        g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+        if (!primary && !getText().equals("‹")) {
+          g.setColor(LINE);
+          g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+        }
+        g.dispose();
+        super.paintComponent(graphics);
+      }
+    };
     b.setFont(font(13, primary));
     b.setForeground(primary ? Color.WHITE : BLUE);
     b.setFocusPainted(true);
@@ -167,18 +196,15 @@ final class ReferenceTheme {
       g.setStroke(new BasicStroke(1.7f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
       if (name.equals("records")) {
         g.drawRoundRect(7, 4, 18, 24, 3, 3);
-        for (int yy = 11; yy <= 23; yy += 6) g.drawLine(12, yy, 21, yy);
+        for (int yy = 11; yy <= 23; yy += 6)
+          g.drawLine(12, yy, 21, yy);
       } else if (name.equals("settings")) {
         g.drawOval(7, 7, 18, 18);
         g.drawOval(13, 13, 6, 6);
         for (int i = 0; i < 8; i++) {
           double a = i * Math.PI / 4;
-          g.draw(
-              new Line2D.Double(
-                  16 + Math.cos(a) * 9,
-                  16 + Math.sin(a) * 9,
-                  16 + Math.cos(a) * 13,
-                  16 + Math.sin(a) * 13));
+          g.draw(new Line2D.Double(16 + Math.cos(a) * 9, 16 + Math.sin(a) * 9,
+              16 + Math.cos(a) * 13, 16 + Math.sin(a) * 13));
         }
       } else if (name.equals("bluetooth")) {
         Path2D p = new Path2D.Double();
@@ -215,15 +241,13 @@ final class ReferenceTheme {
     protected void paintComponent(Graphics graphics) {
       Graphics2D g = (Graphics2D) graphics.create();
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      int phase = (int) (System.nanoTime() / 80_000_000L % 12),
-          cx = getWidth() / 2,
+      int phase = (int) (System.nanoTime() / 80_000_000L % 12), cx = getWidth() / 2,
           cy = getHeight() / 2;
       for (int i = 0; i < 12; i++) {
         double angle = i * Math.PI / 6;
         g.setColor(new Color(23, 100, 237, 45 + Math.floorMod(i - phase, 12) * 18));
-        g.fill(
-            new Ellipse2D.Double(
-                cx + Math.cos(angle) * 12 - 2, cy + Math.sin(angle) * 12 - 2, 4, 4));
+        g.fill(new Ellipse2D.Double(cx + Math.cos(angle) * 12 - 2, cy + Math.sin(angle) * 12 - 2, 4,
+            4));
       }
       g.dispose();
     }
