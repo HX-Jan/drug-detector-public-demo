@@ -8,6 +8,7 @@ public final class DetectionResult {
   public final double baselinePeak, samplePeak, concentration;
   public final Calibration calibration;
   public final Signal signal;
+  public final DataOrigin origin;
 
   public DetectionResult(
       String id,
@@ -18,6 +19,28 @@ public final class DetectionResult {
       double samplePeak,
       Calibration calibration,
       Signal signal) {
+    this(
+        id,
+        sampleId,
+        drug,
+        epochMillis,
+        baselinePeak,
+        samplePeak,
+        calibration,
+        signal,
+        DataOrigin.UNKNOWN);
+  }
+
+  public DetectionResult(
+      String id,
+      String sampleId,
+      DrugType drug,
+      long epochMillis,
+      double baselinePeak,
+      double samplePeak,
+      Calibration calibration,
+      Signal signal,
+      DataOrigin origin) {
     if (id == null
         || id.isEmpty()
         || sampleId == null
@@ -26,6 +49,7 @@ public final class DetectionResult {
         || calibration == null
         || calibration.drug != drug
         || signal == null
+        || origin == null
         || epochMillis < 0
         || !Double.isFinite(baselinePeak)
         || !Double.isFinite(samplePeak)) throw new IllegalArgumentException("检测记录无效");
@@ -37,10 +61,11 @@ public final class DetectionResult {
     this.samplePeak = samplePeak;
     this.calibration = calibration;
     this.signal = signal;
+    this.origin = origin;
     concentration = calibration.concentration(samplePeak - baselinePeak);
   }
 
   public String status() {
-    return calibration.inRange(concentration) ? "待判定（标曲范围内）" : "超出标曲范围";
+    return origin.label + " · " + (calibration.inRange(concentration) ? "待判定（标曲范围内）" : "超出标曲范围");
   }
 }

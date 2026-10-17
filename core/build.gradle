@@ -19,3 +19,9 @@ tasks.register('verifyDemoCatalog', JavaExec) {
     mainClass = 'org.example.detector.core.DemoCatalogVerification'
 }
 check.dependsOn verifyDemoCatalog
+tasks.register('verifyAcquisition', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.example.detector.core.AcquisitionVerification'
+}
+check.dependsOn verifyAcquisition

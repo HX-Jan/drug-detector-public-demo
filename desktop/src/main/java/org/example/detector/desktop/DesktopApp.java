@@ -22,6 +22,7 @@ public final class DesktopApp extends JFrame {
   final Path dataDirectory;
   JPanel body, footer, screen;
   private Calibration selectedCalibration;
+  private DataOrigin selectedOrigin = DataOrigin.UNKNOWN;
   private boolean administrator;
   private javax.swing.Timer timer;
   private DetectionSession session;
@@ -49,7 +50,7 @@ public final class DesktopApp extends JFrame {
     screen.setBackground(Color.WHITE);
     JPanel top = column();
     top.setBorder(BorderFactory.createEmptyBorder(7, 16, 7, 16));
-    add(top, label(date.format(new Date()), 10, MUTED), 18, 8);
+    add(top, label(date.format(new Date()) + "    演示模式 · 合成信号", 10, MUTED), 18, 8);
     JPanel heading = new JPanel(new BorderLayout(9, 0));
     heading.setOpaque(false);
     if (back) {
@@ -173,8 +174,8 @@ public final class DesktopApp extends JFrame {
     JLabel dot = label("●", 13, device.connected() ? GREEN : MUTED);
     row.add(dot, BorderLayout.WEST);
     JPanel summary = column();
-    add(summary, label(device.connected() ? "设备已连接，就绪" : "设备未连接", 12, INK), 21, 1);
-    add(summary, label("工作站未连接 · 请先在设备连接页接入", 10, MUTED), 16, 0);
+    add(summary, label(device.connected() ? "模拟设备已连接，就绪" : "模拟设备未连接", 12, INK), 21, 1);
+    add(summary, label("使用内置合成信号，不连接真实硬件", 10, MUTED), 16, 0);
     row.add(summary);
     row.add(label(device.connected() ? "已连接  ›" : "未连接  ›", 10, device.connected() ? GREEN : MUTED),
         BorderLayout.EAST);
@@ -218,7 +219,7 @@ public final class DesktopApp extends JFrame {
           count++;
     } catch (IOException ignored) {
     }
-    note("请先连接设备，再开始样品测试");
+    note(device.connected() ? "已就绪，可开始模拟样品测试" : "请先连接模拟设备");
     JPanel stats = new JPanel(new BorderLayout());
     stats.setOpaque(false);
     stats.add(label("今日已检测 " + count + " 例", 10, MUTED));
@@ -294,6 +295,7 @@ public final class DesktopApp extends JFrame {
       if (chosen == null)
         throw new IllegalStateException("请先由管理员保存一条标准曲线");
       selectedCalibration = chosen.fit();
+      selectedOrigin = chosen.origin;
       session = new DetectionSession(id.getText().trim(), chosen.drug,
           minutes * 60000L, () -> System.nanoTime() / 1000000);
       step();
@@ -463,7 +465,8 @@ public final class DesktopApp extends JFrame {
     step();
     progress("正在检测", "正在扫描并分析样品信号…", 1600, () -> {
       unsaved = session.complete(selectedCalibration, device.baseline(),
-          device.sample(session.sampleId, session.drug), System.currentTimeMillis());
+          device.sample(session.sampleId, session.drug), System.currentTimeMillis(),
+          DataOrigin.combine(device.origin(), selectedOrigin));
       savePending();
     });
   }
@@ -501,7 +504,7 @@ public final class DesktopApp extends JFrame {
     tabs(new String[]{"检测信息", "DPV 曲线", "计算详情"}, tab, i -> detail(r, i));
     JPanel p = card();
     if (tab == 0) {
-      text(p, "检测完成", 21, GREEN);
+      text(p, r.origin == DataOrigin.SIMULATED ? "模拟检测完成" : "检测完成", 21, GREEN);
       text(p, String.format(Locale.ROOT, "%.3f ng/L", r.concentration), 28, INK);
       text(p, r.status(), 11, MUTED);
       text(p, "毒品类型    " + r.drug.label + "\n样品编号    " + r.sampleId + "\n检测时间    "

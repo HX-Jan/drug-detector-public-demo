@@ -20,6 +20,7 @@ public final class MainActivity extends Activity {
   final Workstation workstation = new SimulatedWorkstation();
   CurveLibrary library;
   private Calibration selectedCalibration;
+  private DataOrigin selectedOrigin = DataOrigin.UNKNOWN;
   private boolean administrator;
   private StandardCurve pendingCurveExport;
   private static final int CURVE_EXPORT = 101;
@@ -98,7 +99,7 @@ public final class MainActivity extends Activity {
       });
     else
       root.setFitsSystemWindows(true);
-    TextView status = label(time.format(new Date()), 10, MUTED);
+    TextView status = label(time.format(new Date()) + "    演示模式 · 合成信号", 10, MUTED);
     status.setPadding(d(14), d(5), d(14), d(3));
     root.addView(status);
     LinearLayout heading = new LinearLayout(this);
@@ -208,8 +209,8 @@ public final class MainActivity extends Activity {
     TextView dot = label("●", 15, workstation.connected() ? GREEN : MUTED);
     row.addView(dot, new LinearLayout.LayoutParams(d(22), -2));
     LinearLayout summary = column(this);
-    summary.addView(label(workstation.connected() ? "设备已连接，就绪" : "设备未连接", 13, INK));
-    summary.addView(label(workstation.connected() ? "工作站已连接" : "工作站未连接", 10, MUTED));
+    summary.addView(label(workstation.connected() ? "模拟设备已连接，就绪" : "模拟设备未连接", 13, INK));
+    summary.addView(label("使用内置合成信号，不连接真实硬件", 10, MUTED));
     row.addView(summary, new LinearLayout.LayoutParams(0, -2, 1));
     row.addView(label(workstation.connected() ? "已连接  ›" : "未连接  ›", 11,
         workstation.connected() ? GREEN : MUTED));
@@ -258,7 +259,7 @@ public final class MainActivity extends Activity {
           count++;
     } catch (IOException ignored) {
     }
-    note("请先连接设备，再开始样品测试");
+    note(workstation.connected() ? "已就绪，可开始模拟样品测试" : "请先连接模拟设备");
     LinearLayout stats = new LinearLayout(this);
     stats.addView(label("今日已检测 " + count + " 例", 10, MUTED),
         new LinearLayout.LayoutParams(0, -2, 1));
@@ -325,6 +326,7 @@ public final class MainActivity extends Activity {
       if (chosen == null)
         throw new IllegalStateException("请先由管理员保存一条标准曲线");
       selectedCalibration = chosen.fit();
+      selectedOrigin = chosen.origin;
       session = new DetectionSession(id.getText().toString().trim(), chosen.drug,
           reactionMinutes * 60000L, SystemClock::elapsedRealtime);
       step();
@@ -482,7 +484,8 @@ public final class MainActivity extends Activity {
     step();
     progress("正在检测", "正在扫描并分析样品信号…", 1600, () -> {
       unsaved = session.complete(selectedCalibration, workstation.baseline(),
-          workstation.sample(session.sampleId, session.drug), System.currentTimeMillis());
+          workstation.sample(session.sampleId, session.drug), System.currentTimeMillis(),
+          DataOrigin.combine(workstation.origin(), selectedOrigin));
       savePending();
     });
   }
@@ -519,7 +522,7 @@ public final class MainActivity extends Activity {
     tabs(new String[]{"检测信息", "DPV 曲线", "计算详情"}, tab, i -> detail(r, i));
     LinearLayout p = card();
     if (tab == 0) {
-      text(p, "检测完成", 21, GREEN);
+      text(p, r.origin == DataOrigin.SIMULATED ? "模拟检测完成" : "检测完成", 21, GREEN);
       text(p, String.format(Locale.ROOT, "%.3f ng/L", r.concentration), 28, INK);
       text(p, r.status(), 11, MUTED);
       text(p, "毒品类型    " + r.drug.label + "\n样品编号    " + r.sampleId + "\n检测时间    "

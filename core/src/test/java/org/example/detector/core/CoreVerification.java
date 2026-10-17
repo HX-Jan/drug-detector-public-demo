@@ -94,9 +94,12 @@ public final class CoreVerification {
                 station.sample("DEMO-001", c.drug),
                 1000));
     DetectionResult result =
-        flow.complete(c, station.baseline(), station.sample("DEMO-001", c.drug), 1000);
+        flow.complete(
+            c, station.baseline(), station.sample("DEMO-001", c.drug), 1000, station.origin());
     check(result.calibration.id.equals(c.id), "calibration snapshot");
-    check(result.status().startsWith("待判定"), "simulation label");
+    check(
+        result.status().startsWith("模拟数据") && result.origin == DataOrigin.SIMULATED,
+        "simulation label");
     near(c.concentration(result.samplePeak - result.baselinePeak), result.concentration);
     rejects(() -> flow.complete(c, station.baseline(), station.sample("DEMO-001", c.drug), 1000));
     flow.cancel();
@@ -156,10 +159,10 @@ public final class CoreVerification {
         String value = new String(xml, java.nio.charset.StandardCharsets.UTF_8);
         if (entry.getName().equals("xl/worksheets/sheet1.xml")) {
           summary =
-              value.contains("detector-result") && value.contains("DEMO-001") && !value.contains("<f>");
+              value.contains("SIMULATED") && value.contains("DEMO-001") && !value.contains("<f>");
         }
         if (entry.getName().equals("xl/worksheets/sheet2.xml")) {
-          traces = value.contains("detector-result");
+          traces = value.contains("SIMULATED");
         }
       }
     }

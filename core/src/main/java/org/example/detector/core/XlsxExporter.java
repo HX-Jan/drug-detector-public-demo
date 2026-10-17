@@ -75,14 +75,14 @@ public final class XlsxExporter {
           "ΔI μA", "标曲ID", "k", "b", "r", "下限 ng/L", "上限 ng/L");
       row(traces, "数据来源", "记录ID", "电位 V", "电流 μA");
       for (DetectionResult r : records) {
-        row(summary, "detector-result", r.id, r.sampleId, r.drug.label, r.concentration,
+        row(summary, r.origin.name(), r.id, r.sampleId, r.drug.label, r.concentration,
             DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(r.epochMillis)), r.status(),
             r.baselinePeak, r.samplePeak, r.samplePeak - r.baselinePeak, r.calibration.id,
             r.calibration.slope, r.calibration.intercept, r.calibration.r, r.calibration.min,
             r.calibration.max);
         double[] v = r.signal.voltages(), i = r.signal.currents();
         for (int n = 0; n < v.length; n++)
-          row(traces, "detector-result", r.id, v[n], i[n]);
+          row(traces, r.origin.name(), r.id, v[n], i[n]);
       }
       entry(zip, "xl/worksheets/sheet1.xml", summary.append("</sheetData></worksheet>").toString());
       entry(zip, "xl/worksheets/sheet2.xml", traces.append("</sheetData></worksheet>").toString());

@@ -33,6 +33,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Java compilation failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Verification failed' }
 & $javaPath '-Dfile.encoding=UTF-8' -cp $buildDir org.example.detector.core.StandardCurveVerification
 if ($LASTEXITCODE -ne 0) { throw 'Standard curve verification failed' }
+& $javaPath '-Dfile.encoding=UTF-8' -cp $buildDir org.example.detector.core.AcquisitionVerification
+if ($LASTEXITCODE -ne 0) { throw 'Acquisition verification failed' }
+& $javaPath '-Dfile.encoding=UTF-8' -cp $buildDir org.example.detector.core.DemoCatalogVerification
+if ($LASTEXITCODE -ne 0) { throw 'Demo catalog verification failed' }
 # UI 验收使用临时数据目录，不读取或污染日常演示记录。
 if ($VerifyUi) {
     & $javaPath '-Dfile.encoding=UTF-8' -cp $buildDir org.example.detector.desktop.DesktopVerification (Join-Path $repoRoot 'desktop\build\ui-evidence')

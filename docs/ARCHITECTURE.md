@@ -27,6 +27,12 @@ v0.2 的 `ReferenceUi`（Android）与 `ReferenceTheme`（电脑）集中定义�
 
 ## 标曲约定
 
+v1.0.1 规定 `Workstation` 返回 V，`CurveWorkflow` 在标曲边界显式转换成 mV。配置化的活化、基线和标准样品接口接收 `StandardCurve` 参数，未实现的适配器明确报错。模拟器生成重复偏差，工作流只保存逐次信号并计算寻峰、平均、拟合与 LOD，不自行构造采集电流。两端进度在每次回调执行一次采集，失败时不提交整组数据。
+
+`StandardCurve` 保存三次基线、各浓度三次轨迹/平均轨迹，以及十次 LOD 原始信号；属性文件同时保存来源和活化单位确认状态。旧文件仍可读，缺少来源时使用 `UNKNOWN`，旧峰值示意与单位未核实的活化分开提示。`CurveLibrary.initializeIfAbsent` 仅在没有库文件时一次性写入四类模板，删除后的空库也是已初始化状态。
+
+检测二进制编码 v2 保留 `DataOrigin`，向后读取 v1 时使用 `UNKNOWN`。模拟采集或模拟标曲参与计算时，最终结果来源为 `SIMULATED`；不把合成结果归为设备实测。
+
 交互界面说明1对应的新流程由 `CurveWorkflow` 控制；`StandardCurve` 保存参数、采集值与 LOD/LOQ；`CurveLibrary` 用原子文件替换持久化完整标曲；`CurveExport` 生成 JSON 与 XLSX。`DesktopCurveEditor` 和 `AndroidCurveEditor` 只负责原生界面适配。新向导采用固定基线差，支持 2–10 个浓度点，每点三次重复；LOD 为十次反算浓度的样本标准差乘 2.82，LOQ 为 LOD 的四倍。下文的相邻差值接口为旧版兼容接口。
 
 输入浓度需为 5–10 个严格递增的正数；峰电流需要多一个 I0。使用中心化最小二乘计算 k/b，并以 Pearson r 表示相关系数。k 必须为正且不接近零；不设未经实验确认的 r 合格阈值。标曲适用范围为输入浓度最小值到最大值。当前线性模型是演示约定；真实信号可能需要非线性拟合、对数浓度或其他预处理，应以实验确认后单独实现。

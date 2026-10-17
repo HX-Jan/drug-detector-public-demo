@@ -128,6 +128,8 @@ public final class DesktopVerification {
         }
       });
       capture(evidence.resolve("home.png"));
+      if (app.library.all().stream().map(c -> c.drug).distinct().count() != 4)
+        throw new AssertionError("Fresh library must offer four drug types");
       waitFor("开始样品测试");
       capture(evidence.resolve("home-connected.png"));
       click("开始样品测试");
@@ -156,6 +158,8 @@ public final class DesktopVerification {
       waitFor("导出检测数据");
       if (new FileResultRepository(data).all().size() != 1)
         throw new AssertionError("Result not persisted");
+      if (new FileResultRepository(data).all().get(0).origin != DataOrigin.SIMULATED)
+        throw new AssertionError("Result must retain simulated origin");
       capture(evidence.resolve("result.png"));
       click("DPV 曲线");
       capture(evidence.resolve("signal.png"));
@@ -195,6 +199,15 @@ public final class DesktopVerification {
       if (app.library.all().size() != curvesBeforeDelete - 1)
         throw new AssertionError("Curve deletion failed");
       click("添加");
+      SwingUtilities.invokeAndWait(() -> {
+        for (Component c : app.body.getComponents())
+          if (c instanceof JComboBox) {
+            JComboBox<?> types = (JComboBox<?>) c;
+            if (types.getItemCount() != 4) throw new AssertionError("Missing drug choices");
+            types.setSelectedIndex(DrugType.METHADONE.ordinal());
+            break;
+          }
+      });
       capture(evidence.resolve("curve-info.png"));
       parameter("英文名", "GH");
       parameter("扫描范围起点 (mV)", "-500");
@@ -235,6 +248,10 @@ public final class DesktopVerification {
       click("下一步：导出与保存");
       click("结果保存");
       click("导出本地");
+      StandardCurve savedCurve = app.library.all().stream().filter(c -> c.name.equals("GH")).findFirst().orElseThrow();
+      if (savedCurve.drug != DrugType.METHADONE || savedCurve.origin != DataOrigin.SIMULATED
+          || savedCurve.baselineSignals.length != 3 || savedCurve.points.get(0).repeats.length != 3 || savedCurve.lodSignals.length != 10)
+        throw new AssertionError("Saved curve lost type, origin or repeated traces");
       capture(evidence.resolve("curve-export.png"));
       if (new CurveLibrary(data.resolve("curves")).all().stream()
           .noneMatch(c -> c.name.equals("GH")))

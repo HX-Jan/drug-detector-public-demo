@@ -140,13 +140,14 @@ final class AndroidCurveEditor implements CurveWorkflow.View {
     app.add(p, new SignalChart(app, signal, unit), 245, 0);
   }
   @Override
-  public void progress(String title, String message, int count, Runnable complete) {
-    round(title, message, 1, count, complete);
+  public void progress(String title, String message, int count, IntConsumer acquire, Runnable complete) {
+    round(title, message, 1, count, acquire, complete);
   }
-  private void round(String title, String message, int n, int count, Runnable complete) {
+  private void round(String title, String message, int n, int count, IntConsumer acquire, Runnable complete) {
     app.progress(title, "第 " + n + "/" + count + " 次 · " + message, 450, () -> {
+      acquire.accept(n - 1);
       if (n < count)
-        round(title, message, n + 1, count, complete);
+        round(title, message, n + 1, count, acquire, complete);
       else
         complete.run();
     });

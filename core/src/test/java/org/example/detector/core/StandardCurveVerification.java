@@ -103,7 +103,9 @@ public final class StandardCurveVerification {
                 (java.util.function.Consumer<String>) values[3];
             fields.put((String) values[0], changed);
           } else if (method.getName().equals("progress")) {
-            ((Runnable) values[3]).run();
+            for (int i = 0; i < (Integer) values[2]; i++)
+              ((java.util.function.IntConsumer) values[3]).accept(i);
+            ((Runnable) values[4]).run();
           }
           return null;
         });

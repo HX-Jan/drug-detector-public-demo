@@ -6,7 +6,13 @@ import java.util.function.LongSupplier;
 public final class DetectionSession {
   public enum Stage {
     // 顺序对应界面的活化、加样、反应、冲洗、检测五步；界面不得自行跳过状态。
-    PREPARED, SAMPLE_ADDED, REACTING, READY, MEASURING, COMPLETED, CANCELLED
+    PREPARED,
+    SAMPLE_ADDED,
+    REACTING,
+    READY,
+    MEASURING,
+    COMPLETED,
+    CANCELLED
   }
 
   public final String sampleId;
@@ -17,9 +23,10 @@ public final class DetectionSession {
   private long start;
 
   public DetectionSession(String sampleId, DrugType drug, long reactionMillis, LongSupplier clock) {
-    if (sampleId == null || !sampleId.matches("[A-Za-z0-9_-]{1,40}") || drug == null
-        || reactionMillis <= 0)
-      throw new IllegalArgumentException("样品编号限 1–40 位字母、数字、下划线或短横线");
+    if (sampleId == null
+        || !sampleId.matches("[A-Za-z0-9_-]{1,40}")
+        || drug == null
+        || reactionMillis <= 0) throw new IllegalArgumentException("样品编号限 1–40 位字母、数字、下划线或短横线");
     this.sampleId = sampleId;
     this.drug = drug;
     this.reactionMillis = reactionMillis;
@@ -31,8 +38,7 @@ public final class DetectionSession {
   }
 
   private void require(Stage expected) {
-    if (stage != expected)
-      throw new IllegalStateException("当前流程状态不允许此操作：" + stage);
+    if (stage != expected) throw new IllegalStateException("当前流程状态不允许此操作：" + stage);
   }
 
   public void confirmElectrode() {
@@ -53,8 +59,7 @@ public final class DetectionSession {
 
   public void finishReaction() {
     require(Stage.REACTING);
-    if (remainingMillis() > 0)
-      throw new IllegalStateException("反应计时尚未结束");
+    if (remainingMillis() > 0) throw new IllegalStateException("反应计时尚未结束");
     stage = Stage.READY;
   }
 
@@ -66,25 +71,40 @@ public final class DetectionSession {
 
   public void beginMeasurement(boolean connected) {
     require(Stage.READY);
-    if (!connected)
-      throw new IllegalStateException("设备未连接");
+    if (!connected) throw new IllegalStateException("设备未连接");
     stage = Stage.MEASURING;
   }
 
-  public DetectionResult complete(Calibration calibration, Signal baseline, Signal sample,
-      long epochMillis) {
+  public DetectionResult complete(
+      Calibration calibration, Signal baseline, Signal sample, long epochMillis) {
+    return complete(calibration, baseline, sample, epochMillis, DataOrigin.UNKNOWN);
+  }
+
+  public DetectionResult complete(
+      Calibration calibration,
+      Signal baseline,
+      Signal sample,
+      long epochMillis,
+      DataOrigin origin) {
     require(Stage.MEASURING);
-    if (calibration.drug != drug)
-      throw new IllegalArgumentException("标曲与检测类型不匹配");
+    if (calibration.drug != drug) throw new IllegalArgumentException("标曲与检测类型不匹配");
     // 结果保存当次标曲快照，之后修改标曲不应改变历史结果的解释。
-    DetectionResult result = new DetectionResult(java.util.UUID.randomUUID().toString(), sampleId,
-        drug, epochMillis, baseline.peak(), sample.peak(), calibration, sample);
+    DetectionResult result =
+        new DetectionResult(
+            java.util.UUID.randomUUID().toString(),
+            sampleId,
+            drug,
+            epochMillis,
+            baseline.peak(),
+            sample.peak(),
+            calibration,
+            sample,
+            origin);
     stage = Stage.COMPLETED;
     return result;
   }
 
   public void cancel() {
-    if (stage != Stage.COMPLETED)
-      stage = Stage.CANCELLED;
+    if (stage != Stage.COMPLETED) stage = Stage.CANCELLED;
   }
 }
