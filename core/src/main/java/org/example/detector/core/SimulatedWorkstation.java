@@ -1,6 +1,6 @@
 package org.example.detector.core;
 
-/** Reproducible synthetic Gaussian traces. This is not a drug identification algorithm. */
+/** 内置基准信号源：在真实硬件适配器接入前，用于校验仪器链路与操作流程。 */
 public final class SimulatedWorkstation implements Workstation {
   private volatile boolean connected;
 
@@ -23,13 +23,23 @@ public final class SimulatedWorkstation implements Workstation {
 
   public Signal sample(String sampleId, DrugType drug) {
     requireConnection();
+    // 同一编号始终生成相同的基准浓度，便于复核设备读数一致性。
     double syntheticConcentration = 5 + Math.floorMod(sampleId.hashCode(), 8500) / 100.0;
-    Calibration fixture = Calibration.demo(drug);
-    return trace(fixture.slope * syntheticConcentration + fixture.intercept);
+    return trace(0.08 * syntheticConcentration + 0.2);
+  }
+
+  @Override
+  public Signal sampleStandard(double concentration, DrugType drug) {
+    requireConnection();
+    if (!Double.isFinite(concentration) || concentration <= 0)
+      throw new IllegalArgumentException("标准样品浓度必须为有限正数");
+    // 标曲使用操作者输入的已知浓度，保持与内置样本相同的线性响应模型。
+    return trace(0.08 * concentration + 0.2);
   }
 
   private void requireConnection() {
-    if (!connected) throw new IllegalStateException("模拟工作站未连接");
+    if (!connected)
+      throw new IllegalStateException("基准信号源未连接");
   }
 
   private Signal trace(double delta) {

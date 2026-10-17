@@ -6,7 +6,7 @@ import android.view.View;
 import java.util.Locale;
 import org.example.detector.core.Signal;
 
-/** Density-independent axes for the narrow device viewport. */
+/** 按屏幕密度缩放坐标轴，在窄屏中绘制电位—电流曲线及单位。 */
 final class SignalChart extends View {
   private final Signal signal;
   private final String xUnit;
@@ -20,7 +20,7 @@ final class SignalChart extends View {
     super(context);
     this.signal = signal;
     this.xUnit = xUnit;
-    setContentDescription("演示曲线，横轴 " + xUnit + "，纵轴微安");
+    setContentDescription("DPV 曲线，横轴 " + xUnit + "，纵轴微安");
   }
 
   @Override
@@ -36,9 +36,7 @@ final class SignalChart extends View {
       max = Math.max(max, value);
     }
     double span = Math.max(0.1, max - min);
-    float left = 40,
-        top = 22,
-        right = getWidth() / density - 12,
+    float left = 40, top = 22, right = getWidth() / density - 12,
         bottom = getHeight() / density - 35;
     pen.setStyle(Paint.Style.FILL);
     pen.setTextSize(9);
@@ -62,8 +60,10 @@ final class SignalChart extends View {
     for (int i = 0; i < x.length; i++) {
       float px = left + (float) ((x[i] - x[0]) / (x[x.length - 1] - x[0])) * (right - left),
           py = bottom - (float) ((y[i] - min) / span) * (bottom - top);
-      if (i == 0) path.moveTo(px, py);
-      else path.lineTo(px, py);
+      if (i == 0)
+        path.moveTo(px, py);
+      else
+        path.lineTo(px, py);
     }
     pen.setColor(ReferenceUi.BLUE);
     pen.setStyle(Paint.Style.STROKE);

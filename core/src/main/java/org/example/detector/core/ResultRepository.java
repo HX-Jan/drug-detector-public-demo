@@ -2,6 +2,7 @@ package org.example.detector.core;
 
 import java.util.List;
 
+/** 两端共用的记录读写接口；组合查询按编号包含匹配和类型筛选，结果按时间倒序。 */
 public interface ResultRepository {
   void save(DetectionResult result) throws java.io.IOException;
 
