@@ -11,4 +11,9 @@ public interface Workstation {
   Signal baseline();
 
   Signal sample(String sampleId, DrugType drug);
+
+  /** 标准样品采集；设备适配器仍读取实际信号，模拟器可使用已知浓度。 */
+  default Signal sampleStandard(double concentration, DrugType drug) {
+    return sample("curve-" + concentration, drug);
+  }
 }

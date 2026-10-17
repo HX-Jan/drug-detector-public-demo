@@ -17,7 +17,7 @@ import org.example.detector.core.*;
 public final class MainActivity extends Activity {
   private static final int EXPORT = 100;
   private final Handler handler = new Handler(Looper.getMainLooper());
-  private final Workstation workstation = new SimulatedWorkstation();
+  final Workstation workstation = new SimulatedWorkstation();
   CurveLibrary library;
   private Calibration selectedCalibration;
   private boolean administrator;

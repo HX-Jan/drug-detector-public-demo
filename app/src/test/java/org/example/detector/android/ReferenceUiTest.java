@@ -54,6 +54,18 @@ public class ReferenceUiTest {
       }
     return null;
   }
+
+  private Spinner firstSpinner(View parent) {
+    if (parent instanceof Spinner)
+      return (Spinner) parent;
+    if (parent instanceof ViewGroup)
+      for (int i = 0; i < ((ViewGroup) parent).getChildCount(); i++) {
+        Spinner found = firstSpinner(((ViewGroup) parent).getChildAt(i));
+        if (found != null)
+          return found;
+      }
+    return null;
+  }
   /** 实际点击参数并通过界面键盘提交，避免绕过向导校验。 */
   private void parameter(String label, String value) throws IOException {
     View field = tag(root(), label);
@@ -131,6 +143,7 @@ public class ReferenceUiTest {
       render("android-connected", 360, 640);
       click("开始样品测试");
       render("android-workflow", 360, 640);
+      click("加载内置测试样本");
       click("开始活化");
       advance(200);
       render("android-activation", 360, 640);
@@ -144,7 +157,7 @@ public class ReferenceUiTest {
       advance(200);
       render("android-measurement", 360, 640);
       advance(1700);
-      assertNotNull(find(root(), "模拟检测完成"));
+      assertNotNull(find(root(), "记录详情"));
       assertEquals(1, new SqliteResultRepository(activity).all().size());
       render("android-result", 360, 640);
       click("DPV 曲线");
@@ -202,10 +215,8 @@ public class ReferenceUiTest {
       advance(1500);
       render("android-curve-points", 360, 640);
       click("下一步：LOD/LOQ");
-      Spinner method = null;
-      for (int i = 0; i < activity.body.getChildCount(); i++)
-        if (activity.body.getChildAt(i) instanceof Spinner)
-          method = (Spinner) activity.body.getChildAt(i);
+      render("android-lod-after-nav", 360, 640);
+      Spinner method = firstSpinner(activity.body);
       assertNotNull(method);
       method.setSelection(1);
       advance(10);

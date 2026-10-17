@@ -23,6 +23,7 @@ public final class StandardCurveVerification {
     throw new AssertionError("应拒绝非法操作");
   }
   public static void main(String[] args) throws Exception {
+    verifySimulatedCurveWorkflow();
     StandardCurve c = new StandardCurve();
     rejects(c::validateInfo);
     c.name = "GH";
@@ -83,6 +84,48 @@ public final class StandardCurveVerification {
       }
     }
     System.out.println("PASS: 标曲拟合、LOD/LOQ、校验、失效、重启、删除、JSON/XLSX");
+  }
+  /** 通过向导采集已知浓度，防止样品编号的哈希值产生负斜率。 */
+  private static void verifySimulatedCurveWorkflow() throws Exception {
+    Map<String, Runnable> buttons = new HashMap<>();
+    Map<String, java.util.function.Consumer<String>> fields = new HashMap<>();
+    CurveWorkflow.View view = (CurveWorkflow.View) java.lang.reflect.Proxy.newProxyInstance(
+        CurveWorkflow.View.class.getClassLoader(), new Class<?>[]{CurveWorkflow.View.class},
+        (proxy, method, values) -> {
+          if (method.getName().equals("buttons")) {
+            String[] labels = (String[]) values[0];
+            Runnable[] actions = (Runnable[]) values[2];
+            for (int i = 0; i < labels.length; i++)
+              buttons.put(labels[i], actions[i]);
+          } else if (method.getName().equals("field")) {
+            @SuppressWarnings("unchecked")
+            java.util.function.Consumer<String> changed =
+                (java.util.function.Consumer<String>) values[3];
+            fields.put((String) values[0], changed);
+          } else if (method.getName().equals("progress")) {
+            ((Runnable) values[3]).run();
+          }
+          return null;
+        });
+    StandardCurve curve = new StandardCurve();
+    curve.name = "GH";
+    curve.scanStart = -500;
+    curve.scanEnd = 500;
+    curve.peakStart = -200;
+    curve.peakEnd = 200;
+    curve.activation = signal(.1);
+    curve.confirmBaseline(new double[]{1, 1, 1});
+    CurveWorkflow workflow = new CurveWorkflow(view, null, curve, () -> {});
+    workflow.show(2);
+    for (String concentration : new String[]{"1", "10", "20"}) {
+      fields.get("浓度").accept(concentration);
+      buttons.get("添加浓度").run();
+      if (curve.points.size() >= 2) {
+        near(curve.fit().slope, .08);
+        near(curve.fit().intercept, .2);
+      }
+    }
+    workflow.show(3);
   }
   private static Signal signal(double peak) {
     double[] x = new double[201], y = new double[201];

@@ -28,6 +28,15 @@ public final class SimulatedWorkstation implements Workstation {
     return trace(0.08 * syntheticConcentration + 0.2);
   }
 
+  @Override
+  public Signal sampleStandard(double concentration, DrugType drug) {
+    requireConnection();
+    if (!Double.isFinite(concentration) || concentration <= 0)
+      throw new IllegalArgumentException("标准样品浓度必须为有限正数");
+    // 标曲使用操作者输入的已知浓度，保持与内置样本相同的线性响应模型。
+    return trace(0.08 * concentration + 0.2);
+  }
+
   private void requireConnection() {
     if (!connected)
       throw new IllegalStateException("基准信号源未连接");

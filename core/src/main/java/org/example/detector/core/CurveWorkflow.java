@@ -185,7 +185,7 @@ public final class CurveWorkflow {
         if (curve.points.size() >= 10)
           throw new IllegalArgumentException("最多添加 10 个浓度点");
         view.progress("浓度采集", "采集 " + concentration + " pg/mL 数据中…", 3, () -> {
-          Signal signal = workstation.sample("curve-" + concentration, curve.drug);
+          Signal signal = workstation.sampleStandard(concentration, curve.drug);
           curve.addPoint(concentration, new double[]{signal.peak(), signal.peak(), signal.peak()});
           show(2);
           view.message("浓度采集完成：3 次重复");
